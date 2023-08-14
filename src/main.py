@@ -36,6 +36,7 @@ class LocalHelper:
       cv2.imwrite(snapshot_file, img)
       LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
+    # TODO: Implement threading here
     if len(os.listdir('facedump')) >= 50:
       print('OVERFLOW')
       filesA = []
@@ -44,6 +45,7 @@ class LocalHelper:
         file = f'facedump/{file}'
         filesA.append(file)
       LocalHelper.zipFiles(filesA)
+    # TODO: Add check for 'video' directory overflow
 
   def GetURLSafeTime():
     out = os.popen('time /t').read().replace('\n', '')
@@ -77,10 +79,14 @@ class LocalHelper:
     os.mkdir(dump_dir)
     for target in target_files:
       target_name = target.split('/')[-1]
-      with open(target, 'rb') as Fin:
-        content = Fin.read()
-      with open(f'{dump_dir}/{target_name}', 'wb') as Fout:
-        Fout.write(content)
+      target_ext = target_name[target_name.find('.'):]
+      if target_ext == '.png':
+        with open(target, 'rb') as Fin:
+          content = Fin.read()
+        with open(f'{dump_dir}/{target_name}', 'wb') as Fout:
+          Fout.write(content)
+      else:
+        target_files.remove(target)
 
     zip_file = shutil.make_archive(dump_dir, 'zip', dump_dir)
     shutil.rmtree(dump_dir)
@@ -115,7 +121,7 @@ while True:
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   faces = faceCascade.detectMultiScale(
     gray,
-    scaleFactor=1.2,
+    scaleFactor=1.3,
     minNeighbors=5,
     minSize=(20, 20)
   )

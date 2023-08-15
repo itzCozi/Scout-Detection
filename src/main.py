@@ -58,13 +58,16 @@ class LocalHelper:
       print(response)
 
   def zipFiles(target_files, faceORvideo):
+    if faceORvideo == 'facedump': ideal_ext = '.png'
+    elif faceORvideo == 'video': ideal_ext = '.avi'
+    else: return 0  # Pass the right arg bro...
     dump_dir = f'{faceORvideo}/dump #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}'
     target_files = list(target_files)
     os.mkdir(dump_dir)
     for target in target_files:
       target_name = target.split('/')[-1]
       target_ext = target_name[target_name.find('.'):]
-      if target_ext == '.png':
+      if target_ext == ideal_ext:
         with open(target, 'rb') as Fin:
           content = Fin.read()
         with open(f'{dump_dir}/{target_name}', 'wb') as Fout:
@@ -75,17 +78,19 @@ class LocalHelper:
     zip_file = shutil.make_archive(dump_dir, 'zip', dump_dir)
     shutil.rmtree(dump_dir)
     for target in target_files:
-      if target.endswith('.png'):
-        os.remove(target)
+      if target.endswith(ideal_ext):
+        try: os.remove(target)
+        except: pass  # Tried to delete working video
 
 
 # TODO's
 '''
 * OPTIMIZE
-* Implement eye detection in test.py ✔️
+* Maybe lower minSize to increase accuracy
 * Make it send a 'F15' input so we dont go to sleep
 * Add a movement detector maybe??
 * Implement threading to help with consistency and pauses
+* Implement eye detection in test.py ✔️
 * Create a cap on amount of snapshots (Compressed them instead) ✔️
 * Snapshot every time a face is detected and save it ✔️
 * Output video file ✔️
@@ -131,7 +136,6 @@ class faceDetection:
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
       if len(os.listdir('facedump')) >= 50:
-
         def dumpCheck():
           print('OVERFLOW')
           files = []
@@ -143,7 +147,6 @@ class faceDetection:
         thread1 = THC.Thread(dumpCheck())
         thread1.start()
       if len(os.listdir('video')) >= 35:
-
         def videoCheck():
           print('OVERFLOW')
           files = []
@@ -215,28 +218,28 @@ class faceEyeDetection:  # This shit is janky at best...
         if str(eyes) != '()':
           print(f'Eye found: {funcs.getTime()}')
         snapshot_file = f'facedump/{funcs.uniqueIDGen()}.png'
-        #cv2.imwrite(snapshot_file, img)
-        #LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
+        cv2.imwrite(snapshot_file, img)
+        LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
       if len(os.listdir('facedump')) >= 50:
         def dumpCheck():
-          print('OVERFLOW')
-          files = []
-          for file in os.listdir('facedump'):
-            file = f'facedump/{file}'
-            files.append(file)
-          LocalHelper.zipFiles(files, 'facedump')
+          print('IMAGE OVERFLOW')
+          filesA = []
+          for fileA in os.listdir('facedump'):
+            fileA = f'facedump/{fileA}'
+            filesA.append(fileA)
+          LocalHelper.zipFiles(filesA, 'facedump')
 
         thread1 = THC.Thread(dumpCheck())
         thread1.start()
-      if len(os.listdir('video')) >= 35:
+      if len(os.listdir('video')) >= 35:  # DOESNT WORK (maybe)
         def videoCheck():
-          print('OVERFLOW')
-          files = []
-          for file in os.listdir('video'):
-            file = f'video/{file}'
-            files.append(file)
-          LocalHelper.zipFiles(files, 'video')
+          print('VIDEO OVERFLOW')
+          filesB = []
+          for fileB in os.listdir('video'):
+            fileB = f'video/{fileB}'
+            filesB.append(fileB)
+          LocalHelper.zipFiles(filesB, 'video')
 
         thread2 = THC.Thread(videoCheck())
         thread2.start()

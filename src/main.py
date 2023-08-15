@@ -23,8 +23,7 @@ class globals:
   frame_rate = 10.0
   resolution = (1280, 720)
   MODE = 'FACE-CAPTURE'  # Valid modes: 'FACE-CAPTURE' / 'MOTION-CAPTURE'
-  last_message_sent = os.popen('time /t').read().replace(
-    '\n', '')  # Changes during runtime
+  last_message_sent = os.popen('time /t').read().replace('\n', '')  # Changes during runtime
   webhook_url = 'https://discord.com/api/webhooks/1140680728519127092/9_a9xGQKaE59MiyY8r8SkaA6RwceDBYXlFe6eW8NqEtr0hoBJzaNyqRfJ7_SDtIkrWz1'
   webhook = DiscordWebhook(url=webhook_url)
 
@@ -58,8 +57,9 @@ class LocalHelper:
       response = globals.webhook.api_post_request()
       print(response)
 
-  def zipFiles(target_files):
-    dump_dir = f'facedump/dump #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}'
+  def zipFiles(target_files, faceORvideo):
+    dump_dir = f'{faceORvideo}/dump #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}'
+    target_files = list(target_files)
     os.mkdir(dump_dir)
     for target in target_files:
       target_name = target.split('/')[-1]
@@ -71,15 +71,18 @@ class LocalHelper:
           Fout.write(content)
       else:
         target_files.remove(target)
-
+      
     zip_file = shutil.make_archive(dump_dir, 'zip', dump_dir)
     shutil.rmtree(dump_dir)
     for target in target_files:
-      os.remove(target)
+      if target.endswith('.png'):
+        os.remove(target)
 
 
 # TODO's
 '''
+* OPTIMIZE
+* Implement eye detection in test.py
 * Make it send a 'F15' input so we dont go to sleep
 * Add a movement detector maybe??
 * Implement threading to help with consistency and pauses
@@ -120,23 +123,33 @@ class faceDetection:
       cv2.imshow('video', img)
 
       if str(faces) == '()':
-        print('No faces')
+        pass
       else:
         print(f'Face found: {funcs.getTime()}')
         snapshot_file = f'facedump/{funcs.uniqueIDGen()}.png'
         cv2.imwrite(snapshot_file, img)
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
-      # TODO: Implement threading here
       if len(os.listdir('facedump')) >= 50:
-        print('OVERFLOW')
-        filesA = []
-        files = os.listdir('facedump')
-        for file in files:
-          file = f'facedump/{file}'
-          filesA.append(file)
-        LocalHelper.zipFiles(filesA)
-      # TODO: Add check for 'video' directory overflow
+        def dumpCheck():
+          print('OVERFLOW')
+          files = []
+          for file in os.listdir('facedump'):
+            file = f'facedump/{file}'
+            files.append(file)
+          LocalHelper.zipFiles(files, 'facedump')
+        thread1 = THC.Thread(dumpCheck())
+        thread1.start()
+      if len(os.listdir('video')) >= 35:
+        def videoCheck():
+          print('OVERFLOW')
+          files = []
+          for file in os.listdir('video'):
+            file = f'video/{file}'
+            files.append(file)
+          LocalHelper.zipFiles(files, 'video')
+        thread2 = THC.Thread(videoCheck())
+        thread2.start()
 
       key = cv2.waitKey(30) & 0xff
       if key == 27:  # press 'ESC' to quit

@@ -20,7 +20,7 @@ class globals:
     '1080p': (1920, 1080),
     '4k': (3840, 2160),
   }
-  frame_rate = 20.0
+  frame_rate = 20.0  # Pretty CPU intensive '10.0' is good!
   resolution = (1280, 720)
   MODE = 'FACE-CAPTURE'  # Valid modes: 'FACE-CAPTURE' / 'MOTION-CAPTURE'
   last_message_sent = os.popen('time /t').read().replace('\n', '')  # Changes during runtime
@@ -131,6 +131,7 @@ class faceDetection:
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
       if len(os.listdir('facedump')) >= 50:
+
         def dumpCheck():
           print('OVERFLOW')
           files = []
@@ -138,9 +139,11 @@ class faceDetection:
             file = f'facedump/{file}'
             files.append(file)
           LocalHelper.zipFiles(files, 'facedump')
+
         thread1 = THC.Thread(dumpCheck())
         thread1.start()
       if len(os.listdir('video')) >= 35:
+
         def videoCheck():
           print('OVERFLOW')
           files = []
@@ -148,6 +151,7 @@ class faceDetection:
             file = f'video/{file}'
             files.append(file)
           LocalHelper.zipFiles(files, 'video')
+
         thread2 = THC.Thread(videoCheck())
         thread2.start()
 
@@ -162,7 +166,7 @@ class faceDetection:
     cv2.destroyAllWindows()
 
 
-class faceEyeDetection:
+class faceEyeDetection:  # This shit is janky at best...
 
   def __init__(self) -> None:
     video_output_name = f'video/cam #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}.avi'
@@ -211,11 +215,10 @@ class faceEyeDetection:
         if str(eyes) != '()':
           print(f'Eye found: {funcs.getTime()}')
         snapshot_file = f'facedump/{funcs.uniqueIDGen()}.png'
-        cv2.imwrite(snapshot_file, img)
-        LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
+        #cv2.imwrite(snapshot_file, img)
+        #LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
       if len(os.listdir('facedump')) >= 50:
-
         def dumpCheck():
           print('OVERFLOW')
           files = []
@@ -227,7 +230,6 @@ class faceEyeDetection:
         thread1 = THC.Thread(dumpCheck())
         thread1.start()
       if len(os.listdir('video')) >= 35:
-
         def videoCheck():
           print('OVERFLOW')
           files = []

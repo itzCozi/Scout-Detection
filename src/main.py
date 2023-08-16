@@ -131,7 +131,7 @@ class faceDetection:
         pass
       else:
         print(f'Face found: {funcs.getTime()}')
-        snapshot_file = f'facedump/{funcs.uniqueIDGen()}.png'
+        snapshot_file = f'facedump/snapshot #{funcs.uniqueIDGen()}.png'
         cv2.imwrite(snapshot_file, img)
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
@@ -210,14 +210,14 @@ class faceEyeDetection:  # This shit is janky at best...
       out.write(img)
       cv2.imshow('video', img)
 
-      if str(faces) == '()' and str(eyes) == '()':
+      if str(faces) == '()' or str(eyes) == '()':  # Switching 'and' to 'or' fixes it
         pass
       else:
         if str(faces) != '()':
           print(f'Face found: {funcs.getTime()}')
         if str(eyes) != '()':
           print(f'Eye found: {funcs.getTime()}')
-        snapshot_file = f'facedump/{funcs.uniqueIDGen()}.png'
+        snapshot_file = f'facedump/snapshot #{funcs.uniqueIDGen()}.png'
         cv2.imwrite(snapshot_file, img)
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
@@ -232,7 +232,7 @@ class faceEyeDetection:  # This shit is janky at best...
 
         thread1 = THC.Thread(dumpCheck())
         thread1.start()
-      if len(os.listdir('video')) >= 35:  # DOESNT WORK (maybe)
+      if len(os.listdir('video')) >= 35:
         def videoCheck():
           print('VIDEO OVERFLOW')
           filesB = []

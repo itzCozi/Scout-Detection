@@ -86,8 +86,6 @@ class LocalHelper:
 # TODO's
 '''
 * OPTIMIZE
-* Implement a snapshot limiter like one every 30 secs
-* Maybe lower minSize to increase accuracy
 * Make it send a 'F15' input so we dont go to sleep
 * Add a movement detector maybe??
 * Implement threading to help with consistency and pauses

@@ -4,10 +4,11 @@ try:
   import cv2
   import keyboard
   import time
+  import random
+  import string
   import shutil
   import threading as THC
   from discord_webhook import DiscordWebhook, DiscordEmbed
-  from helper import functions as funcs
 except ModuleNotFoundError as e:
   print(f'ERROR: An error occurred when importing dependencies. \n{e}\n')
   sys.exit(1)
@@ -24,16 +25,30 @@ class globals:
   resolution = (1280, 720)
   MODE = 'FACE-CAPTURE'  # Valid modes: 'FACE-CAPTURE' / 'MOTION-CAPTURE'
   last_message_sent = os.popen('time /t').read().replace('\n', '')  # Changes during runtime
+  last_screenshot = os.popen('time /t').read().replace('\n', '')  # Also changes during runtime
   webhook_url = 'https://discord.com/api/webhooks/1140680728519127092/9_a9xGQKaE59MiyY8r8SkaA6RwceDBYXlFe6eW8NqEtr0hoBJzaNyqRfJ7_SDtIkrWz1'
   webhook = DiscordWebhook(url=webhook_url)
 
 
 class LocalHelper:
 
-  def GetURLSafeTime():
+  def getTime():
+    return os.popen('time /t').read().replace('\n', '')
+
+  def getURLSafeTime():
     out = os.popen('time /t').read().replace('\n', '')
     time = out.replace(':', '-').replace(' ', '')
     return time
+
+  def uniqueIDGen():
+    charset = string.ascii_uppercase + string.digits
+    retlist = []
+    length = 8
+    for i in range(length):
+      retlist.append(random.choice(charset))
+    random.shuffle(retlist)
+    retlist.insert(4, '-')
+    return ''.join(retlist)
 
   def sendDiscordAlert(*file_path):
     time = os.popen('time /t').read().replace('\n', '')
@@ -52,7 +67,7 @@ class LocalHelper:
         globals.webhook.add_file(file_data, file_name)
 
       embed.set_title('Scout Alert')
-      embed.set_description(f'Scout detected a face: {funcs.getTime()}')
+      embed.set_description(f'Scout detected a face: {LocalHelper.getTime()}')
       globals.webhook.add_embed(embed)
       response = globals.webhook.api_post_request()
       print(response)
@@ -61,7 +76,7 @@ class LocalHelper:
     if faceORvideo == 'facedump': ideal_ext = '.png'
     elif faceORvideo == 'video': ideal_ext = '.avi'
     else: return 0  # Pass the right arg bro...
-    dump_dir = f'{faceORvideo}/dump #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}'
+    dump_dir = f'{faceORvideo}/dump #{LocalHelper.uniqueIDGen()} {LocalHelper.getURLSafeTime()}'
     target_files = list(target_files)
     os.mkdir(dump_dir)
     for target in target_files:
@@ -85,21 +100,19 @@ class LocalHelper:
 
 # TODO's
 '''
-* OPTIMIZE
-* Make it send a 'F15' input so we dont go to sleep
-* Add a movement detector maybe??
-* Implement threading to help with consistency and pauses
-* Implement eye detection in test.py ✔️
-* Create a cap on amount of snapshots (Compressed them instead) ✔️
-* Snapshot every time a face is detected and save it ✔️
-* Output video file ✔️
+1 * Make it send a 'F15' input so we dont go to sleep
+2 * Implement threading to help with consistency and pauses
+3 * Implement eye detection in test.py ✔️
+4 * Create a cap on amount of snapshots (Compressed them instead) ✔️
+5 * Snapshot every time a face is detected and save it ✔️
+6 * Output video file ✔️
 '''
 
 
 class faceDetection:
 
-  def __init__(self) -> None:
-    video_output_name = f'video/cam #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}.avi'
+  def __init__(*self) -> None:
+    video_output_name = f'video/cam #{LocalHelper.uniqueIDGen()} {LocalHelper.getURLSafeTime()}.avi'
     faceCascade = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter(video_output_name, fourcc, globals.frame_rate, globals.resolution)
@@ -129,8 +142,8 @@ class faceDetection:
       if str(faces) == '()':
         pass
       else:
-        print(f'Face found: {funcs.getTime()}')
-        snapshot_file = f'facedump/snapshot #{funcs.uniqueIDGen()}.png'
+        print(f'Face found: {LocalHelper.getTime()}')
+        snapshot_file = f'facedump/snapshot #{LocalHelper.uniqueIDGen()}.png'
         cv2.imwrite(snapshot_file, img)
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
@@ -170,8 +183,8 @@ class faceDetection:
 
 class faceEyeDetection:  # This shit is janky at best...
 
-  def __init__(self) -> None:
-    video_output_name = f'video/cam #{funcs.uniqueIDGen()} {LocalHelper.GetURLSafeTime()}.avi'
+  def __init__(*self) -> None:
+    video_output_name = f'video/cam #{LocalHelper.uniqueIDGen()} {LocalHelper.getURLSafeTime()}.avi'
     faceCascade = cv2.CascadeClassifier('cascades/haarcascade_frontalface_default.xml')
     eyeCascade = cv2.CascadeClassifier('cascades/haarcascade_eye.xml')
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -213,10 +226,10 @@ class faceEyeDetection:  # This shit is janky at best...
         pass
       else:
         if str(faces) != '()':
-          print(f'Face found: {funcs.getTime()}')
+          print(f'Face found: {LocalHelper.getTime()}')
         if str(eyes) != '()':
-          print(f'Eye found: {funcs.getTime()}')
-        snapshot_file = f'facedump/snapshot #{funcs.uniqueIDGen()}.png'
+          print(f'Eye found: {LocalHelper.getTime()}')
+        snapshot_file = f'facedump/snapshot #{LocalHelper.uniqueIDGen()}.png'
         cv2.imwrite(snapshot_file, img)
         LocalHelper.sendDiscordAlert(video_output_name, snapshot_file)
 
@@ -252,6 +265,3 @@ class faceEyeDetection:  # This shit is janky at best...
     cap.release()
     out.release()
     cv2.destroyAllWindows()
-
-
-faceEyeDetection()
